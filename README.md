@@ -1,5 +1,5 @@
-Tag Extension for [Mecha](https://github.com/mecha-cms/mecha)
-=============================================================
+Author Extension for [Mecha](https://github.com/mecha-cms/mecha)
+================================================================
 
 ![Code Size](https://img.shields.io/github/languages/code-size/mecha-cms/x.author?color=%23444&style=for-the-badge)
 
