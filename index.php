@@ -26,7 +26,7 @@ function route($content, $path, $query, $hash, $r) {
     ]);
     $pages = \Pages::from($folder, 'page', $deep)->sort($sort);
     if ($pages->count() > 0) {
-        $pages->lot($pages->is(static function($v) use($name) {
+        $pages->lot($pages->is(static function ($v) use ($name) {
             $page = new \Page($v);
             $author = $page->author->name ?? "";
             return $author && $name === $author;
@@ -96,7 +96,7 @@ $GLOBALS['author'] = null;
 if ($author && $route === \trim($state->x->author->route ?? 'author', '/') && \is_file($file = \LOT . \D . 'user' . \D . $author . '.page')) {
     $GLOBALS['author'] = new \User($file);
     \Hook::set('route.author', __NAMESPACE__ . "\\route", 100);
-    \Hook::set('route.page', function($content, $path, $query, $hash) use($route) {
+    \Hook::set('route.page', function ($content, $path, $query, $hash) use ($route) {
         if ($path && \preg_match('/^(.*?)\/' . \x($route) . '\/([^\/]+)\/([1-9]\d*)$/', $path, $m)) {
             [$any, $path, $name, $i] = $m;
             $r['name'] = $name;
