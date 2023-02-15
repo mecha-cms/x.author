@@ -1,0 +1,9 @@
+{
+  "description": "Lists all pages in the current folder filtered by author.",
+  "license": "GPL-3.0-or-later",
+  "name": "mecha-cms/x.author",
+  "require": {
+    "mecha-cms/x.page": "^3.0.0",
+    "mecha-cms/x.user": "^2.0.0"
+  }
+}
