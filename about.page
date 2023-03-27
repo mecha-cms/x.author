@@ -6,10 +6,6 @@ color: '#b35d10'
 author: Taufik Nurrohman
 type: Markdown
 version: 1.0.0
-
-use:
-  '.\lot\x\page': 1
-  '.\lot\x\user': 1
 ...
 
 This extension activates the author filter feature by utilizing the `author` property of the page to add several routes
