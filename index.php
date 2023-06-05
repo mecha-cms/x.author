@@ -1,6 +1,6 @@
 <?php namespace x\author;
 
-function route($content, $path, $query, $hash) {
+function route__author($content, $path, $query, $hash) {
     if (null !== $content) {
         return $content;
     }
@@ -91,6 +91,21 @@ function route($content, $path, $query, $hash) {
     }
 }
 
+function route__page($content, $path, $query, $hash) {
+    if (null !== $content) {
+        return $content;
+    }
+    \extract($GLOBALS, \EXTR_SKIP);
+    $route = \trim($state->x->author->route ?? 'author', '/');
+    // Return the route value to the native page route and move the author route parameter to `name`
+    if ($path && \preg_match('/^(.*?)\/' . \x($route) . '\/([^\/]+)\/([1-9]\d*)$/', $path, $m)) {
+        [$any, $path, $name, $part] = $m;
+        $query = \To::query(\array_replace(\From::query($query), ['name' => $name]));
+        return \Hook::fire('route.author', [$content, $path . '/' . $part, $query, $hash]);
+    }
+    return $content;
+}
+
 $chops = \explode('/', $url->path ?? "");
 $part = \array_pop($chops);
 $author = \array_pop($chops);
@@ -103,14 +118,6 @@ if ($author && $route === \trim($state->x->author->route ?? 'author', '/') && ($
     \LOT . \D . 'user' . \D . $author . '.page'
 ], 1))) {
     $GLOBALS['author'] = new \User($file);
-    \Hook::set('route.author', __NAMESPACE__ . "\\route", 100);
-    \Hook::set('route.page', function ($content, $path, $query, $hash) use ($route) {
-        // Return the route value to the native page route and move the author route parameter to `name`
-        if ($path && \preg_match('/^(.*?)\/' . \x($route) . '\/([^\/]+)\/([1-9]\d*)$/', $path, $m)) {
-            [$any, $path, $name, $part] = $m;
-            $query = \To::query(\array_replace(\From::query($query), ['name' => $name]));
-            return \Hook::fire('route.author', [$content, $path . '/' . $part, $query, $hash]);
-        }
-        return $content;
-    }, 90);
+    \Hook::set('route.author', __NAMESPACE__ . "\\route__author", 100);
+    \Hook::set('route.page', __NAMESPACE__ . "\\route__page", 90);
 }
