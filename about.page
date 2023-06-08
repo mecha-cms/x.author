@@ -1,6 +1,6 @@
 ---
 title: Author
-description: Lists all pages in the current folder filtered by author.
+description: Lists all pages in the current folder, filtered by author.
 icon: 'M15.54,3.5L20.5,8.47L19.07,9.88L14.12,4.93L15.54,3.5M3.5,19.78L10,13.31C9.9,13 9.97,12.61 10.23,12.35C10.62,11.96 11.26,11.96 11.65,12.35C12.04,12.75 12.04,13.38 11.65,13.77C11.39,14.03 11,14.1 10.69,14L4.22,20.5L14.83,16.95L18.36,10.59L13.42,5.64L7.05,9.17L3.5,19.78Z'
 color: '#b35d10'
 author: Taufik Nurrohman
@@ -8,18 +8,17 @@ type: Markdown
 version: 1.0.0
 ...
 
-This extension activates the author filter feature by utilizing the `author` property of the page to add several routes
-such as `http://127.0.0.1/blog/author/:author/1` on every page to allow users to list all pages in the current folder by
-author.
+This extension enables the author filter feature by using the page’s author property to add multiple routes, such as
+`http://127.0.0.1/blog/author/:author/1`, to each page to allow users to list all pages in the current folder by author.
 
 ### Usage
 
-These HTML classes will be added to the root element if it has a `class` attribute when you are in the archives page.
-You can use this feature to create a specific look or response on your site from the client-side when the following
-classes are found in the root element:
+These HTML classes will be added to the root element if it contains a `class` attribute when you are on the authors
+page. You can use this feature to to create a specific look or response on your site from the client side if the
+following classes are found in the root element:
 
 `is:authors`
-: Will be added if current items view is an authors view and is not empty.
+: Will be added if the current items view is an authors view and is not empty.
 
 Example usage in CSS code:
 
@@ -38,7 +37,7 @@ if (document.documentElement.classList.contains('is:authors')) {
 ~~~
 
 These additional conditional statements are available for use in layouts to show/hide elements on your site from the
-server-side:
+server side:
 
 `$site->is('authors')`
 : Returns `true` if current items view is an authors view and is not empty.
@@ -53,11 +52,10 @@ Example usage in HTML/PHP code:
 <?php endif; ?>
 ~~~
 
-These additional variables are available for use in layouts which will carry the data related to the currently active
-author page:
+These additional variables are available for use in layouts that carry data related to the currently active author page:
 
 `$author`
-: This variable is an instance of the `User` class which you can use to get the author data.
+: This variable is an instance of the `User` class, which you can use to get the author information.
 
 Example usage in HTML/PHP code:
 

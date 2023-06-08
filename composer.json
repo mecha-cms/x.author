@@ -1,5 +1,5 @@
 {
-  "description": "Lists all pages in the current folder filtered by author.",
+  "description": "Lists all pages in the current folder, filtered by author.",
   "license": "GPL-3.0-or-later",
   "name": "mecha-cms/x.author",
   "require": {
