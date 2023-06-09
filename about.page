@@ -14,8 +14,8 @@ This extension enables the author filter feature by using the page’s author pr
 ### Usage
 
 These HTML classes will be added to the root element if it contains a `class` attribute when you are on the authors
-page. You can use this feature to to create a specific look or response on your site from the client side if the
-following classes are found in the root element:
+page. You can use this feature to create a specific look or response on your site from the client side if the following
+classes are found in the root element:
 
 `is:authors`
 : Will be added if the current items view is an authors view and is not empty.
@@ -40,7 +40,7 @@ These additional conditional statements are available for use in layouts to show
 server side:
 
 `$site->is('authors')`
-: Returns `true` if current items view is an authors view and is not empty.
+: Returns `true` if the current items view is an authors view and is not empty.
 
 Example usage in HTML/PHP code:
 
@@ -52,10 +52,11 @@ Example usage in HTML/PHP code:
 <?php endif; ?>
 ~~~
 
-These additional variables are available for use in layouts that carry data related to the currently active author page:
+These additional variables are available for use in layouts that carry data related to the currently active authors
+page:
 
 `$author`
-: This variable is an instance of the `User` class, which you can use to get the author information.
+: This variable is an instance of the `User` class, which you can use to get the current author information.
 
 Example usage in HTML/PHP code:
 

@@ -111,6 +111,7 @@ $part = \array_pop($chops);
 $author = \array_pop($chops);
 $route = \array_pop($chops);
 
+// Initialize response variable(s)
 $GLOBALS['author'] = null;
 
 if ($author && $route === \trim($state->x->author->route ?? 'author', '/') && ($file = \exist([
