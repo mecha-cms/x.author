@@ -8,7 +8,7 @@ type: Markdown
 version: 1.0.0
 ...
 
-This extension enables the author filter feature by using the page’s author property to add multiple routes, such as
+This extension enables the author filter feature by using the page’s `author` property to add multiple routes, such as
 `http://127.0.0.1/blog/author/:author/1`, to each page to allow users to list all pages in the current folder by author.
 
 ### Usage
