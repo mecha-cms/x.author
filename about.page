@@ -5,7 +5,7 @@ icon: 'M15.54,3.5L20.5,8.47L19.07,9.88L14.12,4.93L15.54,3.5M3.5,19.78L10,13.31C9
 color: '#b35d10'
 author: Taufik Nurrohman
 type: Markdown
-version: 1.0.0
+version: 1.0.1
 ...
 
 This extension enables the author filter feature by using the page’s `author` property to add multiple routes, such as

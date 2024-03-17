@@ -4,7 +4,7 @@ function route__author($content, $path, $query, $hash) {
     if (null !== $content) {
         return $content;
     }
-    \extract($GLOBALS, \EXTR_SKIP);
+    \extract(\lot(), \EXTR_SKIP);
     $name = \From::query($query)['name'] ?? "";
     if ($path && \preg_match('/^(.*?)\/([1-9]\d*)$/', $path, $m)) {
         [$any, $path, $part] = $m;
@@ -59,7 +59,7 @@ function route__author($content, $path, $query, $hash) {
                     'pages' => false
                 ]
             ]);
-            $GLOBALS['t'][] = \i('Error');
+            \lot('t')[] = \i('Error');
             return ['page', [], 404];
         }
         \State::set([
@@ -76,11 +76,11 @@ function route__author($content, $path, $query, $hash) {
                 'parent' => true
             ]
         ]);
-        $GLOBALS['t'][] = \i('Author');
-        $GLOBALS['t'][] = (string) $author;
-        $GLOBALS['page'] = $page;
-        $GLOBALS['pager'] = $pager;
-        $GLOBALS['pages'] = $pages;
+        \lot('t')[] = \i('Author');
+        \lot('t')[] = (string) $author;
+        \lot('page', $page);
+        \lot('pager', $pager);
+        \lot('pages', $pages);
         \State::set('has', [
             'next' => !!$pager->next,
             'parent' => !!$pager->parent,
@@ -95,7 +95,7 @@ function route__page($content, $path, $query, $hash) {
     if (null !== $content) {
         return $content;
     }
-    \extract($GLOBALS, \EXTR_SKIP);
+    \extract(\lot(), \EXTR_SKIP);
     $route = \trim($state->x->author->route ?? 'author', '/');
     // Return the route value to the native page route and move the author route parameter to `name`
     if ($path && \preg_match('/^(.*?)\/' . \x($route) . '\/([^\/]+)\/([1-9]\d*)$/', $path, $m)) {
@@ -112,13 +112,13 @@ $author = \array_pop($chops);
 $route = \array_pop($chops);
 
 // Initialize response variable(s)
-$GLOBALS['author'] = null;
+\lot('author', null);
 
 if ($author && $route === \trim($state->x->author->route ?? 'author', '/') && ($file = \exist([
     \LOT . \D . 'user' . \D . $author . '.archive',
     \LOT . \D . 'user' . \D . $author . '.page'
 ], 1))) {
-    $GLOBALS['author'] = new \User($file);
+    \lot('author', new \User($file));
     \Hook::set('route.author', __NAMESPACE__ . "\\route__author", 100);
     \Hook::set('route.page', __NAMESPACE__ . "\\route__page", 90);
 }
