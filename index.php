@@ -1,6 +1,10 @@
 <?php
 
 namespace {
+    // Disable this extension if `user` extension is disabled or removed ;)
+    if (!isset($state->x->user)) {
+        return;
+    }
     // Initialize layout variable(s)
     \lot('author', new \Author);
 }
@@ -16,31 +20,150 @@ namespace x\author {
             $path = \substr($path, 0, -\strlen('/' . $part));
         }
         $part = ($part ?? 0) - 1;
-        $page = $author->parent ?? $author;
-        $chunk = $author->chunk ?? $page->chunk ?? 5;
-        $deep = "" !== $path ? 0 : true;
-        $sort = \array_replace([1, 'path'], (array) ($author->sort ?? []), (array) ($page->sort ?? []));
-        // For `/author/:name`, `/author/:name/:part`, and `/…/author/:name/:part`
-        if ($name = \State::get('[x].query.author') ?? "") {
-            $folder = \LOT . \D . 'user';
+        // For `/…/author/:part`, and `/…/author/:name/:part`
+        if ($part >= 0 && $path) {
+            $folder = \LOT . \D . 'page' . \D . $path;
             if ($file = \exist([
-                $folder . \D . $name . '.archive',
-                $folder . \D . $name . '.page'
+                $folder . '.archive',
+                $folder . '.page'
+            ], 1)) {
+                \lot('page', $page = new \Page($file));
+                // For `/…/author/:name/:part`
+                if ($name = \State::get('[x].query.author') ?? "") {
+                    $chunk = $author->chunk ?? $page->chunk ?? 5;
+                    $sort = \array_replace([1, 'path'], (array) ($page->sort ?? []), (array) ($author->sort ?? []));
+                    $pages = $page->children('page', $deep = true)->is(function ($v) use ($name) {
+                        $v = $v->author;
+                        if ($v instanceof \User) {
+                            $v = $v->name;
+                        } else {
+                            $v = (string) $v;
+                        }
+                        return $name === $v;
+                    })->sort($sort);
+                    \State::set([
+                        'chunk' => $chunk,
+                        'count' => $count = $pages->count, // Total number of page(s) before chunk
+                        'deep' => $deep,
+                        'part' => $part + 1,
+                        'sort' => $sort
+                    ]);
+                    \lot('t')[] = $page->title;
+                    \lot('t')[] = \i('Author');
+                    \lot('t')[] = $author->title;
+                    $pager = \Pager::from($pages);
+                    $pager->path = $path . '/' . $route . '/' . $name;
+                    \lot('pager', $pager = $pager->chunk($chunk, $part));
+                    \lot('pages', $pages = $pages->chunk($chunk, $part));
+                    \State::set([
+                        'has' => [
+                            'next' => !!$pager->next,
+                            'page' => !!$page->exist,
+                            'pages' => ($count = $pages->count) > 0, // Total number of page(s) after chunk
+                            'parent' => !!$page->parent,
+                            'prev' => !!$pager->prev
+                        ],
+                        'is' => [
+                            'error' => false,
+                            'page' => false,
+                            'pages' => true
+                        ]
+                    ]);
+                    if (0 === $count) {
+                        \State::set('is.error', 404);
+                        \lot('t')[] = \i('Error');
+                        return ['pages/author/' . $name, [], 404];
+                    }
+                    return ['pages/author/' . $name, [], 200];
+                }
+                // For `/…/author/:part`
+                $authors = [];
+                $chunk = $page->chunk ?? 5;
+                $sort = \array_replace([1, 'path'], (array) ($page->sort ?? []));
+                if ($pages = $page->children('page', $deep = true)) {
+                    foreach ($pages as $v) {
+                        $v = $v->author;
+                        if ($v && $v instanceof \User) {
+                            $authors[$v->path] = [
+                                'parent' => $page->path,
+                                'path' => $v->path
+                            ];
+                        }
+                    }
+                }
+                $authors = \Authors::from(\array_values($authors))->sort($sort);
+                \State::set([
+                    'chunk' => $chunk,
+                    'count' => $count = $authors->count, // Total number of page(s) before chunk
+                    'deep' => $deep,
+                    'part' => $part + 1,
+                    'sort' => $sort
+                ]);
+                \lot('t')[] = $page->title;
+                \lot('t')[] = \i('Authors');
+                $pager = \Pager::from($authors);
+                $pager->path = $path . '/' . $route;
+                \lot('pager', $pager = $pager->chunk($chunk, $part));
+                \lot('pages', $authors = $authors->chunk($chunk, $part));
+                \State::set([
+                    'has' => [
+                        'next' => !!$pager->next,
+                        'page' => !!$page->exist,
+                        'pages' => ($count = $authors->count) > 0, // Total number of page(s) after chunk
+                        'parent' => !!$page->parent,
+                        'prev' => !!$pager->prev
+                    ],
+                    'is' => [
+                        'error' => false,
+                        'page' => false,
+                        'pages' => true
+                    ]
+                ]);
+                if (0 === $count) {
+                    \State::set('is.error', 404);
+                    \lot('t')[] = \i('Error');
+                    return ['pages/author', [], 404];
+                }
+                return ['pages/author', [], 200];
+            }
+            return $content;
+        }
+        // For `/author/:name`, and `/author/:name/:part`
+        if ($name = \State::get('[x].query.author') ?? "") {
+            \lot('page', $author);
+            $folder = \LOT . \D . 'user' . \D . $name;
+            if ($file = \exist([
+                $folder . '.archive',
+                $folder . '.page'
             ], 1)) {
                 // For `/author/:name`
-                if ($part < 0 && "" === $path) {
-                    \lot('page', $author);
+                if ($part < 0) {
                     \lot('t')[] = \i('Author');
                     \lot('t')[] = $author->title;
                     \State::set([
                         'has' => [
-                            'next' => false,
-                            'prev' => false
+                            'page' => !!$author->exist
+                        ],
+                        'is' => [
+                            'error' => false,
+                            'page' => true,
+                            'pages' => false
                         ]
                     ]);
                     return ['page/author/' . $name, [], 200];
                 }
-                $pages = \Pages::from(\LOT . \D . 'page' . ("" !== $path ? \D . $path : ""), 'page', $deep)->sort($sort);
+                $chunk = $author->chunk ?? 5;
+                $sort = \array_replace([1, 'path'], (array) ($author->sort ?? []));
+                // For `/author/:name/:part`
+                $pages = \Pages::from(\LOT . \D . 'page' . ("" !== $path ? \D . $path : ""), 'page', $deep = true)->is(function ($v) use ($name) {
+                    $v = $v->author;
+                    if ($v instanceof \User) {
+                        $v = $v->name;
+                    } else {
+                        $v = (string) $v;
+                    }
+                    return $name === $v;
+                })->sort($sort);
                 \State::set([
                     'chunk' => $chunk,
                     'count' => $count = $pages->count, // Total number of page(s) before chunk
@@ -48,136 +171,62 @@ namespace x\author {
                     'part' => $part + 1,
                     'sort' => $sort
                 ]);
-                if ($count > 0) {
-                    $pages = $pages->is(function ($v) use ($name) {
-                        $author = $v->author;
-                        if ($author instanceof \User) {
-                            $author = $author->name;
-                        } else {
-                            $author = (string) $author;
-                        }
-                        return $name === $author;
-                    });
-                }
-                \lot('t')[] = \i('Authors');
+                \lot('t')[] = \i('Author');
                 \lot('t')[] = $author->title;
+                \lot('t')[] = \i('Pages');
                 $pager = \Pager::from($pages);
                 $pager->path = $path . '/' . $route . '/' . $name;
-                \lot('page', $page);
                 \lot('pager', $pager = $pager->chunk($chunk, $part));
                 \lot('pages', $pages = $pages->chunk($chunk, $part));
-                if (0 === $pages->count) { // Total number of page(s) after chunk
-                    \State::set([
-                        'has' => [
-                            'next' => false,
-                            'prev' => false
-                        ],
-                        'is' => [
-                            'page' => false,
-                            'pages' => true
-                        ]
-                    ]);
+                \State::set([
+                    'has' => [
+                        'next' => !!$pager->next,
+                        'page' => !!$page->exist,
+                        'pages' => ($count = $pages->count) > 0, // Total number of page(s) after chunk
+                        'parent' => !!$page->parent,
+                        'prev' => !!$pager->prev
+                    ],
+                    'is' => [
+                        'error' => false,
+                        'page' => false,
+                        'pages' => true
+                    ]
+                ]);
+                if (0 === $count) {
+                    \State::set('is.error', 404);
                     \lot('t')[] = \i('Error');
                     return ['pages/author/' . $name, [], 404];
                 }
-                \State::set('has', [
-                    'next' => !!$pager->next,
-                    'pages' => true,
-                    'parent' => !!$author->parent,
-                    'prev' => !!$pager->prev
-                ]);
                 return ['pages/author/' . $name, [], 200];
             }
+            return $content;
+        }
+        if ($part < 0) {
+            \State::set([
+                'is' => [
+                    'author' => false,
+                    'authors' => false
+                ]
+            ]);
             return $content;
         }
         $chunk = $state->x->author->chunk ?? 5;
         $deep = $state->x->author->deep ?? 0;
         $sort = \array_replace([1, 'path'], (array) ($state->x->author->sort ?? []));
-        // For `/…/author/:part`
-        if ($path) {
-            $folder = \LOT . \D . 'page' . \D . $path;
-            $page = new \Page(\exist([
-                $folder . '.archive',
-                $folder . '.page'
-            ], 1) ?: null);
-            $authors = [];
-            foreach (\Pages::from($folder, 'page', $deep) as $v) {
-                $author = $v->author;
-                if (!$author || !($author instanceof \User)) {
-                    continue;
-                }
-                $k = \LOT . \D . 'author' . \D . $author->name;
-                if (!$k = \exist([
-                    $k . '.archive',
-                    $k . '.page'
-                ], 1)) {
-                    continue;
-                }
-                $authors[$k] = [
-                    'parent' => $page->path,
-                    'path' => $k
-                ];
-            }
-            $pages = (new \Authors(\array_values($authors)))->sort($sort);
-            if (0 === ($count = $pages->count)) {
-                return $content;
-            }
-            \State::set('count', $count);
-            $pager = \Pager::from($pages);
-            $pager->hash = $hash;
-            $pager->path = $path . '/' . $route;
-            $pager->query = $query;
-            \lot('page', $page);
-            \lot('pager', $pager = $pager->chunk($chunk, $part));
-            \lot('pages', $pages = $pages->chunk($chunk, $part));
-            \lot('t')[] = $page->title;
-            \lot('t')[] = \i('Authors');
-            if (0 === $pages->count) { // Total number of page(s) after chunk
-                \State::set([
-                    'has' => [
-                        'next' => false,
-                        'page' => false,
-                        'pages' => false,
-                        'parent' => !!$page->parent,
-                        'prev' => false
-                    ],
-                    'is' => [
-                        'error' => 404,
-                        'page' => false,
-                        'pages' => true
-                    ]
-                ]);
-                \lot('t')[] = \i('Error');
-                return ['pages/authors/' . $path, [], 404];
-            }
-            \State::set([
-                'has' => [
-                    'next' => !!$pager->next,
-                    'page' => true,
-                    'pages' => true,
-                    'parent' => !!$page->parent,
-                    'prev' => !!$pager->prev
-                ],
-                'is' => [
-                    'error' => false,
-                    'page' => false,
-                    'pages' => true
-                ]
-            ]);
-            return ['pages/authors', [], 200];
-        }
         // For `/author/:part`
         $pages = \Authors::from(\LOT . \D . 'user', 'page')->sort($sort);
-        if (0 === ($count = $pages->count)) { // Total number of page(s) before chunk
-            return $content;
+        \State::set('count', $count = $pages->count); // Total number of page(s) before chunk
+        if (0 === $count) {
+            \State::set('is.error', 404);
+            \lot('t')[] = \i('Error');
+            return ['pages/authors', [], 404];
         }
-        \State::set('count', $count);
         $pager = \Pager::from($pages);
         $pager->hash = $hash;
         $pager->path = $route;
         $pager->query = $query;
         \lot('page', $page = new \Page([
-            'description' => \i('List of the %s.', 'authors'),
+            'description' => \i('List of site %s.', 'authors'),
             'exist' => true,
             'title' => \i('Authors'),
             'type' => 'HTML'
@@ -185,29 +234,11 @@ namespace x\author {
         \lot('pager', $pager = $pager->chunk($chunk, $part));
         \lot('pages', $pages = $pages->chunk($chunk, $part));
         \lot('t')[] = $page->title;
-        if (0 === $pages->count) { // Total number of page(s) after chunk
-            \State::set([
-                'has' => [
-                    'next' => false,
-                    'page' => false,
-                    'pages' => false,
-                    'parent' => true,
-                    'prev' => false
-                ],
-                'is' => [
-                    'error' => 404,
-                    'page' => false,
-                    'pages' => true
-                ]
-            ]);
-            \lot('t')[] = \i('Error');
-            return ['pages/authors', [], 404];
-        }
         \State::set([
             'has' => [
                 'next' => !!$pager->next,
-                'page' => false,
-                'pages' => true,
+                'page' => !!$page->exist,
+                'pages' => ($count = $pages->count) > 0, // Total number of page(s) after chunk
                 'parent' => !!$page->parent,
                 'prev' => !!$pager->prev
             ],
@@ -217,6 +248,11 @@ namespace x\author {
                 'pages' => true
             ]
         ]);
+        if (0 === $count) {
+            \State::set('is.error', 404);
+            \lot('t')[] = \i('Error');
+            return ['pages/authors', [], 404];
+        }
         return ['pages/authors', [], 200];
     }
     function route__page($content, $path, $query, $hash) {
@@ -234,14 +270,22 @@ namespace x\author {
         }
         if ($part && $path) {
             $a = \explode('/', $path);
-            // For `/…/author/:part`, and `/…/author/:name/:part`
-            if (\array_pop($a) === $route || \array_pop($a) === $route) {
-                return \Hook::fire('route.author', [$content, \implode('/', $a) . '/' . $part, $query, $hash]);
+            // For `/…/author/:part`
+            if ($route === ($v = \array_pop($a))) {
+                return \Hook::fire('route.author', [$content, ($a ? '/' . \implode('/', $a) : "") . '/' . $part, $query, $hash]);
+            }
+            // For `/…/author/:name/:part`
+            $folder = \LOT . \D . 'user' . \D . $v;
+            if ($route === \array_pop($a) && \exist([
+                $folder . '.archive',
+                $folder . '.page'
+            ], 1)) {
+                return \Hook::fire('route.author', [$content, ($a ? '/' . \implode('/', $a) : "") . '/' . $part, $query, $hash]);
             }
         }
         return $content;
     }
-    // Cannot use `x\page\part()` function here because it is not yet defined :(
+    // Cannot use function `x\page\part()` here because it is not yet defined :(
     // if ($part = \x\page\part($path = \trim($url->path ?? "", '/'))) {
     //     $path = \substr($path, 0, -\strlen('/' . $part));
     // }
@@ -249,7 +293,10 @@ namespace x\author {
     $part = \trim(\strrchr($path, '/') ?: $path, '/');
     if ("" !== $part && '0' !== $part[0] && \strspn($part, '0123456789') === \strlen($part) && ($part = (int) $part) > 0) {
         $path = \substr($path, 0, -\strlen('/' . $part));
+    } else {
+        $part = null;
     }
+    $part = ($part ?? 0) - 1;
     $route = \trim($state->x->author->route ?? 'author', '/');
     // For `/author/…`
     if (0 === \strpos($path . '/', $route . '/')) {
@@ -263,13 +310,13 @@ namespace x\author {
                 'part' => $part >= 0
             ],
             'is' => [
-                'author' => !$part,
-                'authors' => !!$part,
+                'author' => $part < 0,
+                'authors' => $part >= 0,
                 'error' => 404,
-                'page' => !$part,
-                'pages' => !!$part
+                'page' => $part < 0,
+                'pages' => $part >= 0
             ],
-            'part' => $part
+            'part' => $part + 1
         ]);
         // For `/author/:name/…`
         if ("" !== ($v = \substr($path, \strlen($route) + 1))) {
@@ -290,30 +337,37 @@ namespace x\author {
         $a = \explode('/', $path);
         $v = \array_pop($a);
         // For `/…/author/:part`
-        if ($a && $part && $v === $route) {
-            \Hook::set('route.author', __NAMESPACE__ . "\\route__author", 100);
-            \Hook::set('route.page', __NAMESPACE__ . "\\route__page", 90);
-            \State::set([
-                'has' => [
-                    'page' => false,
-                    'pages' => false,
-                    'parent' => true,
-                    'part' => true
-                ],
-                'is' => [
-                    'author' => !$part,
-                    'authors' => !!$part,
-                    'error' => 404,
-                    'page' => !$part,
-                    'pages' => !!$part
-                ],
-                'part' => $part
-            ]);
+        if ($a && $part >= 0 && $v === $route) {
+            $folder = \LOT . \D . 'page' . \D . \implode(\D, $a);
+            if ($file = \exist([
+                $folder . '.archive',
+                $folder . '.page'
+            ], 1)) {
+                \Hook::set('route.author', __NAMESPACE__ . "\\route__author", 100);
+                \Hook::set('route.page', __NAMESPACE__ . "\\route__page", 90);
+                $page = new \Page($file);
+                \State::set([
+                    'has' => [
+                        'page' => !!$page->exist,
+                        'pages' => ($pages = $page->children) && $pages->count > 0,
+                        'parent' => !!$page->parent,
+                        'part' => true
+                    ],
+                    'is' => [
+                        'author' => false,
+                        'authors' => true,
+                        'error' => 404,
+                        'page' => false,
+                        'pages' => true
+                    ],
+                    'part' => $part + 1
+                ]);
+            }
         } else {
             $r = \array_pop($a);
             $folder = \LOT . \D . 'user' . \D . $v;
             // For `/…/author/:name/:part`
-            if ($a && $part && $r === $route) {
+            if ($a && $part >= 0 && $r === $route) {
                 \Hook::set('route.author', __NAMESPACE__ . "\\route__author", 100);
                 \Hook::set('route.page', __NAMESPACE__ . "\\route__page", 90);
                 \State::set('[x].query.author', $v);
@@ -325,13 +379,13 @@ namespace x\author {
                         'part' => true
                     ],
                     'is' => [
-                        'author' => !$part,
-                        'authors' => !!$part,
+                        'author' => $part < 0,
+                        'authors' => $part >= 0,
                         'error' => 404,
-                        'page' => !$part,
-                        'pages' => !!$part
+                        'page' => $part < 0,
+                        'pages' => $part >= 0
                     ],
-                    'part' => $part
+                    'part' => $part + 1
                 ]);
                 if ($file = \exist([
                     $folder . '.archive',

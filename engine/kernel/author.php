@@ -4,28 +4,19 @@ class Author extends User {
 
     public function __construct(...$lot) {
         parent::__construct(...$lot);
-        if ($author = $this->author) {
-            $this->title = $author;
+        if ($v = $this->author) {
+            $this->title = $this->title ?? $v;
         }
     }
 
     public function route(...$lot) {
-        $v = $lot[0] ?? null;
-        if (!$path = $this->_exist()) {
-            return $v;
+        if (0 === strpos($this->path ?? P, LOT . D . 'user' . D)) {
+            extract(lot(), EXTR_SKIP);
+            $name = $this->name;
+            $parent = $this->parent;
+            return ($parent ? $parent->route : "") . '/' . trim($state->x->author->route ?? 'author', '/') . '/' . $name;
         }
-        extract(lot(), EXTR_SKIP);
-        if (0 === strpos($path, LOT . D . 'user' . D)) {
-            return '/' . trim($state->x->author->route ?? 'author', '/') . '/' . $this->name;
-        }
-        return $v;
-    }
-
-    public function URL(...$lot) {
-        extract(lot(), EXTR_SKIP);
-        if ($route = $this->route) {
-            return $url . $route;
-        }
+        return parent::route(...$lot);
     }
 
 }

@@ -9,7 +9,18 @@ version: 2.0.0
 ...
 
 This extension enables the author filter feature by using the page’s `author` property to add multiple routes, such as
-`http://127.0.0.1/blog/author/:author/1`, to each page to allow users to list all pages in the current folder by author.
+`http://127.0.0.1/article/author/:name/1`, to each page to allow users to list all pages in the current folder by
+author.
+
+### Routes
+
+Route | Description
+----- | -----------
+`/author/1` | Display all site authors.
+`/author/user-name` | Display the site author for user `@‌user-name`.
+`/author/user-name/1` | Display all pages written by user `@‌user-name` recursively.
+`/article/author/1` | Display all site authors that have been writing under the `/article` route.
+`/article/author/user-name/1` | Display all pages written by user `@‌user-name` recursively under the `/article` route.
 
 ### Usage
 
@@ -17,8 +28,11 @@ These HTML classes will be added to the root element if it contains a `class` at
 page. You can use this feature to create a specific look or response on your site from the client side if the following
 classes are found in the root element:
 
+`is-author`
+: Will be added if the current item view is an author view.
+
 `is-authors`
-: Will be added if the current items view is an authors view and is not empty.
+: Will be added if the current items view is an authors view.
 
 Example usage in CSS code:
 
@@ -39,8 +53,11 @@ if (document.documentElement.classList.contains('is-authors')) {
 These additional conditional statements are available for use in layouts to show/hide elements on your site from the
 server side:
 
+`$site->is('author')`
+: Returns `true` if the current item view is an author view.
+
 `$site->is('authors')`
-: Returns `true` if the current items view is an authors view and is not empty.
+: Returns `true` if the current items view is an authors view.
 
 Example usage in HTML/PHP code:
 
@@ -56,7 +73,7 @@ These additional variables are available for use in layouts that carry data rela
 page:
 
 `$author`
-: This variable is an instance of the `User` class, which you can use to get the current author information.
+: This variable is an instance of the `Author` class, which you can use to get the current author information.
 
 Example usage in HTML/PHP code:
 
