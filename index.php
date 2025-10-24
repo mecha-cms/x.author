@@ -2,20 +2,10 @@
 
 namespace {
     // Initialize layout variable(s)
-    \lot('author', new \User);
+    \lot('author', new \Author);
 }
 
 namespace x\author {
-    function page__route($v) {
-        if (!$path = $this->_exist()) {
-            return $v;
-        }
-        \extract(\lot(), \EXTR_SKIP);
-        if (0 === \strpos($path, \LOT . \D . 'user' . \D)) {
-            return '/' . \trim($state->x->author->route ?? 'author', '/') . '/' . $this->name;
-        }
-        return $v;
-    }
     function route__author($content, $path, $query, $hash) {
         if (null !== $content) {
             return $content;
@@ -125,11 +115,10 @@ namespace x\author {
                 }
                 $authors[$k] = [
                     'parent' => $page->path,
-                    'path' => $k,
-                    'title' => 'asdf'
+                    'path' => $k
                 ];
             }
-            $pages = (new \Users(\array_values($authors)))->sort($sort);
+            $pages = (new \Authors(\array_values($authors)))->sort($sort);
             if (0 === ($count = $pages->count)) {
                 return $content;
             }
@@ -178,7 +167,7 @@ namespace x\author {
             return ['pages/authors', [], 200];
         }
         // For `/author/:part`
-        $pages = \Pages::from(\LOT . \D . 'user', 'page')->sort($sort);
+        $pages = \Authors::from(\LOT . \D . 'user', 'page')->sort($sort);
         if (0 === ($count = $pages->count)) { // Total number of page(s) before chunk
             return $content;
         }
@@ -290,7 +279,7 @@ namespace x\author {
                 $folder . '.archive',
                 $folder . '.page'
             ], 1)) {
-                \lot('author', $author = new \User($file, ['title' => 'asdf']));
+                \lot('author', $author = new \Author($file));
                 \State::set([
                     'has' => ['page' => true],
                     'is' => ['error' => false]
@@ -349,12 +338,11 @@ namespace x\author {
                     $folder . '.page'
                 ], 1)) {
                     $folder = \LOT . \D . 'page' . \D . \implode(\D, $a);
-                    \lot('author', new \User($file, [
+                    \lot('author', new \Author($file, [
                         'parent' => \exist([
                             $folder . '.archive',
                             $folder . '.page'
-                        ], 1) ?: null,
-                        'title' => 'asdf'
+                        ], 1) ?: null
                     ]));
                     \State::set([
                         'has' => ['page' => true],
@@ -364,5 +352,4 @@ namespace x\author {
             }
         }
     }
-    \Hook::set('page.route', __NAMESPACE__ . "\\page__route", 100);
 }
