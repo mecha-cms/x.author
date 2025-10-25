@@ -10,11 +10,11 @@ class Author extends User {
     }
 
     public function route(...$lot) {
-        if (0 === strpos($this->path ?? P, LOT . D . 'user' . D)) {
+        if (0 === strpos($this->path ?? D, LOT . D . 'user' . D)) {
             extract(lot(), EXTR_SKIP);
             $name = $this->name;
             $parent = $this->parent;
-            return ($parent ? $parent->route : "") . '/' . trim($state->x->author->route ?? 'author', '/') . '/' . $name;
+            return ($parent ? $parent->route : "") . '/' . trim($state->x->author->route ?? 'author', '/') . '/' . $name . ($parent ? '/1' : "");
         }
         return parent::route(...$lot);
     }

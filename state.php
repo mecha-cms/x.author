@@ -1,8 +1,11 @@
 <?php
 
 return [
-    'chunk' => 5,
-    'deep' => 0,
-    'route' => '/author',
-    'sort' => [-1, 'time']
+    // Pre-defined page data
+    'page' => [
+        'chunk' => 5,
+        'deep' => 0,
+        'sort' => [-1, 'time']
+    ],
+    'route' => '/author'
 ];

@@ -27,7 +27,7 @@ namespace x\author {
                 $folder . '.archive',
                 $folder . '.page'
             ], 1)) {
-                \lot('page', $page = new \Page($file, ['part' => $part + 1]));
+                \lot('page', $page = new \Page($file));
                 // For `/…/author/:name/:part`
                 if ($name = \State::get('[x].query.author') ?? "") {
                     $chunk = $author->chunk ?? $page->chunk ?? 5;
@@ -65,8 +65,8 @@ namespace x\author {
                 }
                 // For `/…/author/:part`
                 $authors = [];
-                $chunk = $page->chunk ?? 5;
-                $sort = \array_replace([1, 'path'], (array) ($page->sort ?? []));
+                $chunk = $state->x->author->page->chunk ?? $page->chunk ?? 5;
+                $sort = \array_replace([1, 'path'], (array) ($page->sort ?? []), (array) ($state->x->author->page->sort ?? []));
                 if ($pages = $page->children('page', true)) {
                     foreach ($pages as $v) {
                         $v = $v->author;
@@ -91,7 +91,6 @@ namespace x\author {
                 \State::set([
                     'has' => [
                         'next' => !!$pager->next,
-                        'pages' => false,
                         'parent' => !!$page->parent,
                         'prev' => !!$pager->prev
                     ],
@@ -104,7 +103,6 @@ namespace x\author {
         }
         // For `/author/:name`, and `/author/:name/:part`
         if ($name = \State::get('[x].query.author') ?? "") {
-            $author->part = $part + 1;
             \lot('page', $author);
             $folder = \LOT . \D . 'user' . \D . $name;
             if ($file = \exist([
@@ -153,9 +151,9 @@ namespace x\author {
             }
             return $content;
         }
-        $chunk = $state->x->author->chunk ?? 5;
-        $deep = $state->x->author->deep ?? 0;
-        $sort = \array_replace([1, 'path'], (array) ($state->x->author->sort ?? []));
+        $chunk = $state->x->author->page->chunk ?? 5;
+        $deep = $state->x->author->page->deep ?? 0;
+        $sort = \array_replace([1, 'path'], (array) ($state->x->author->page->sort ?? []));
         // For `/author/:part`
         $pages = \Authors::from(\LOT . \D . 'user', 'page')->sort($sort);
         $pager = \Pager::from($pages);
@@ -165,7 +163,6 @@ namespace x\author {
         \lot('page', $page = new \Page([
             'description' => \i('List of site %s.', 'authors'),
             'exist' => true,
-            'part' => $part + 1,
             'title' => \i('Authors'),
             'type' => 'HTML'
         ]));

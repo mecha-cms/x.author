@@ -75,7 +75,7 @@ Example usage in HTML/PHP code:
     </p>
   <?php else: ?>
     <p role="alert">
-      <?= i('Showing a list of articles written by %s.', (string) $author); ?>
+      <?= i('Showing a list of pages written by %s.', (string) $author); ?>
     </p>
   <?php endif; ?>
 <?php endif; ?>
