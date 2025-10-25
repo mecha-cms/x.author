@@ -34,6 +34,9 @@ classes are found in the root element:
 `is-authors`
 : Will be added if the current items view is an authors view.
 
+`with-authors`
+: Will be added if the current items view is an authors view, displaying a list of authors.
+
 Example usage in CSS code:
 
 ~~~ .css
@@ -59,13 +62,22 @@ server side:
 `$site->is('authors')`
 : Returns `true` if the current items view is an authors view.
 
+`$site->with('authors')`
+: Returns `true` if the current items view is an authors view, displaying a list of authors.
+
 Example usage in HTML/PHP code:
 
 ~~~ .html.php
 <?php if ($site->is('authors')): ?>
-  <p role="alert">
-    <?= i('You are currently in the authors page.'); ?>
-  </p>
+  <?php if ($site->with('authors')): ?>
+    <p role="alert">
+      <?= i('You are currently in the authors page.'); ?>
+    </p>
+  <?php else: ?>
+    <p role="alert">
+      <?= i('Showing a list of articles written by %s.', (string) $author); ?>
+    </p>
+  <?php endif; ?>
 <?php endif; ?>
 ~~~
 
@@ -74,13 +86,3 @@ page:
 
 `$author`
 : This variable is an instance of the `Author` class, which you can use to get the current author information.
-
-Example usage in HTML/PHP code:
-
-~~~ .html.php
-<?php if ($site->is('authors') && !empty($author)): ?>
-  <p role="alert">
-    <?= i('Showing list of articles written by %s.', (string) $author); ?>
-  </p>
-<?php endif; ?>
-~~~

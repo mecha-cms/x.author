@@ -27,7 +27,7 @@ namespace x\author {
                 $folder . '.archive',
                 $folder . '.page'
             ], 1)) {
-                \lot('page', $page = new \Page($file));
+                \lot('page', $page = new \Page($file, ['part' => $part + 1]));
                 // For `/…/author/:name/:part`
                 if ($name = \State::get('[x].query.author') ?? "") {
                     $chunk = $author->chunk ?? $page->chunk ?? 5;
@@ -41,13 +41,6 @@ namespace x\author {
                         }
                         return $name === $v;
                     })->sort($sort);
-                    \State::set([
-                        'chunk' => $chunk,
-                        'count' => \q($pages), // Total number of page(s) before chunk
-                        'deep' => true,
-                        'part' => $part + 1,
-                        'sort' => $sort
-                    ]);
                     \lot('t')[] = $page->title;
                     \lot('t')[] = \i('Author');
                     \lot('t')[] = $author->title;
@@ -56,7 +49,7 @@ namespace x\author {
                     $pager->path = $path . '/' . $route . '/' . $name;
                     \lot('pager', $pager = $pager->chunk($chunk, $part));
                     \lot('pages', $pages = $pages->chunk($chunk, $part));
-                    if (0 === ($count = \q($pages))) { // Total number of page(s) after chunk
+                    if (0 === ($count = \q($pages))) {
                         \lot('t')[] = \i('Error');
                     }
                     \State::set([
@@ -86,20 +79,13 @@ namespace x\author {
                     }
                 }
                 $authors = \Authors::from(\array_values($authors))->sort($sort);
-                \State::set([
-                    'chunk' => $chunk,
-                    'count' => \q($authors), // Total number of page(s) before chunk
-                    'deep' => true,
-                    'part' => $part + 1,
-                    'sort' => $sort
-                ]);
                 \lot('t')[] = $page->title;
                 \lot('t')[] = \i('Authors');
                 $pager = \Pager::from($authors);
                 $pager->path = $path . '/' . $route;
                 \lot('pager', $pager = $pager->chunk($chunk, $part));
                 \lot('pages', $authors = $authors->chunk($chunk, $part));
-                if (0 === ($count = \q($authors))) { // Total number of page(s) after chunk
+                if (0 === ($count = \q($authors))) {
                     \lot('t')[] = \i('Error');
                 }
                 \State::set([
@@ -118,6 +104,7 @@ namespace x\author {
         }
         // For `/author/:name`, and `/author/:name/:part`
         if ($name = \State::get('[x].query.author') ?? "") {
+            $author->part = $part + 1;
             \lot('page', $author);
             $folder = \LOT . \D . 'user' . \D . $name;
             if ($file = \exist([
@@ -143,13 +130,6 @@ namespace x\author {
                     return ['page/author/' . $name, [], 200];
                 }
                 // For `/author/:name/:part`
-                \State::set([
-                    'chunk' => $chunk,
-                    'count' => \q($pages), // Total number of page(s) before chunk
-                    'deep' => true,
-                    'part' => $part + 1,
-                    'sort' => $sort
-                ]);
                 \lot('t')[] = \i('Author');
                 \lot('t')[] = $author->title;
                 \lot('t')[] = \i('Pages');
@@ -157,7 +137,7 @@ namespace x\author {
                 $pager->path = $path . '/' . $route . '/' . $name;
                 \lot('pager', $pager = $pager->chunk($chunk, $part));
                 \lot('pages', $pages = $pages->chunk($chunk, $part));
-                if (0 === ($count = \q($pages))) { // Total number of page(s) after chunk
+                if (0 === ($count = \q($pages))) {
                     \lot('t')[] = \i('Error');
                 }
                 \State::set([
@@ -178,7 +158,6 @@ namespace x\author {
         $sort = \array_replace([1, 'path'], (array) ($state->x->author->sort ?? []));
         // For `/author/:part`
         $pages = \Authors::from(\LOT . \D . 'user', 'page')->sort($sort);
-        \State::set('count', \q($pages)); // Total number of page(s) before chunk
         $pager = \Pager::from($pages);
         $pager->hash = $hash;
         $pager->path = $route;
@@ -186,13 +165,14 @@ namespace x\author {
         \lot('page', $page = new \Page([
             'description' => \i('List of site %s.', 'authors'),
             'exist' => true,
+            'part' => $part + 1,
             'title' => \i('Authors'),
             'type' => 'HTML'
         ]));
         \lot('pager', $pager = $pager->chunk($chunk, $part));
         \lot('pages', $pages = $pages->chunk($chunk, $part));
         \lot('t')[] = $page->title;
-        if (0 === ($count = \q($pages))) { // Total number of page(s) after chunk
+        if (0 === ($count = \q($pages))) {
             \lot('t')[] = \i('Error');
         }
         \State::set([
@@ -257,12 +237,9 @@ namespace x\author {
     if (0 === \strpos($path . '/', $route . '/')) {
         \Hook::set('route.author', __NAMESPACE__ . "\\route__author", 100);
         \Hook::set('route.page', __NAMESPACE__ . "\\route__page", 90);
-        \State::set([
-            'is' => [
-                'author' => $part < 0 && $path !== $route,
-                'authors' => $part >= 0
-            ],
-            'part' => $part + 1
+        \State::set('is', [
+            'author' => $part < 0 && $path !== $route,
+            'authors' => $part >= 0
         ]);
         // For `/author/:name/…`
         if ("" !== ($v = \substr($path, \strlen($route) + 1))) {
@@ -281,20 +258,15 @@ namespace x\author {
         // For `/…/author/:part`
         if ($a && $part >= 0 && $v === $route) {
             $folder = \LOT . \D . 'page' . \D . \implode(\D, $a);
-            if ($file = \exist([
+            if (\exist([
                 $folder . '.archive',
                 $folder . '.page'
             ], 1)) {
                 \Hook::set('route.author', __NAMESPACE__ . "\\route__author", 100);
                 \Hook::set('route.page', __NAMESPACE__ . "\\route__page", 90);
-                $page = new \Page($file);
-                \State::set([
-                    'has' => ['parent' => !!$page->parent],
-                    'is' => [
-                        'author' => false,
-                        'authors' => true
-                    ],
-                    'part' => $part + 1
+                \State::set('is', [
+                    'author' => false,
+                    'authors' => true
                 ]);
             }
         } else {
@@ -305,13 +277,9 @@ namespace x\author {
                 \Hook::set('route.author', __NAMESPACE__ . "\\route__author", 100);
                 \Hook::set('route.page', __NAMESPACE__ . "\\route__page", 90);
                 \State::set('[x].query.author', $v);
-                \State::set([
-                    'has' => ['parent' => true],
-                    'is' => [
-                        'author' => false,
-                        'authors' => true
-                    ],
-                    'part' => $part + 1
+                \State::set('is', [
+                    'author' => false,
+                    'authors' => true
                 ]);
                 if ($file = \exist([
                     $folder . '.archive',
