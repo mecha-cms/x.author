@@ -32,15 +32,19 @@ namespace x\author {
                 if ($name = \State::get('[x].query.author') ?? "") {
                     $chunk = $author->chunk ?? $page->chunk ?? 5;
                     $sort = \array_replace([1, 'path'], (array) ($page->sort ?? []), (array) ($author->sort ?? []));
-                    $pages = $page->children('page', true)->is(function ($v) use ($name) {
-                        $v = $v->author;
-                        if ($v instanceof \User) {
-                            $v = $v->name;
-                        } else {
-                            $v = (string) $v;
-                        }
-                        return $name === $v;
-                    })->sort($sort);
+                    if ($pages = $page->children('page', true)) {
+                        $pages = $pages->is(function ($v) use ($name) {
+                            $v = $v->author;
+                            if ($v instanceof \User) {
+                                $v = $v->name;
+                            } else {
+                                $v = (string) $v;
+                            }
+                            return $name === $v;
+                        })->sort($sort);
+                    } else {
+                        $pages = new \Pages;
+                    }
                     \lot('t')[] = $page->title;
                     \lot('t')[] = \i('Author');
                     \lot('t')[] = $author->title;
