@@ -29,7 +29,7 @@ namespace x\author {
             ], 1)) {
                 \lot('page', $page = new \Page($file));
                 // For `/…/author/:name/:part`
-                if ($name = \State::get('[x].query.author') ?? "") {
+                if ($name = $state->q->author ?? "") {
                     $chunk = $author->chunk ?? $page->chunk ?? 5;
                     $sort = \array_replace([1, 'path'], (array) ($page->sort ?? []), (array) ($author->sort ?? []));
                     if ($pages = $page->children('page', true)) {
@@ -106,7 +106,7 @@ namespace x\author {
             return $content;
         }
         // For `/author/:name`, and `/author/:name/:part`
-        if ($name = \State::get('[x].query.author') ?? "") {
+        if ($name = $state->q->author ?? "") {
             \lot('page', $author);
             $folder = \LOT . \D . 'user' . \D . $name;
             if ($file = \exist([
@@ -244,7 +244,7 @@ namespace x\author {
         ]);
         // For `/author/:name/…`
         if ("" !== ($v = \substr($path, \strlen($route) + 1))) {
-            \State::set('[x].query.author', $v);
+            \State::set('q.author', $v);
             $folder = \LOT . \D . 'user' . \D . \strtr($v, '/', \D);
             if ($file = \exist([
                 $folder . '.archive',
@@ -277,11 +277,11 @@ namespace x\author {
             if ($a && $part >= 0 && $r === $route) {
                 \Hook::set('route.author', __NAMESPACE__ . "\\route__author", 100);
                 \Hook::set('route.page', __NAMESPACE__ . "\\route__page", 90);
-                \State::set('[x].query.author', $v);
                 \State::set('is', [
                     'author' => false,
                     'authors' => true
                 ]);
+                \State::set('q.author', $v);
                 if ($file = \exist([
                     $folder . '.archive',
                     $folder . '.page'
