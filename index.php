@@ -29,7 +29,7 @@ namespace x\author {
             ], 1)) {
                 \lot('page', $page = new \Page($file));
                 // For `/…/author/:name/:part`
-                if ($name = $state->q->author ?? "") {
+                if ($name = $state->q('author.name')) {
                     $chunk = $author->chunk ?? $page->chunk ?? 5;
                     $sort = \array_replace([1, 'path'], (array) ($page->sort ?? []), (array) ($author->sort ?? []));
                     if ($pages = $page->children('page', true)) {
@@ -106,7 +106,7 @@ namespace x\author {
             return $content;
         }
         // For `/author/:name`, and `/author/:name/:part`
-        if ($name = $state->q->author ?? "") {
+        if ($name = $state->q('author.name')) {
             \lot('page', $author);
             $folder = \LOT . \D . 'user' . \D . $name;
             if ($file = \exist([
@@ -221,16 +221,8 @@ namespace x\author {
         }
         return $content;
     }
-    // Cannot use function `x\page\part()` here because it is not yet defined :(
-    // if ($part = \x\page\part($path = \trim($url->path ?? "", '/'))) {
-    //     $path = \substr($path, 0, -\strlen('/' . $part));
-    // }
-    $path = \trim($url->path ?? "", '/');
-    $part = \trim(\strrchr($path, '/') ?: $path, '/');
-    if ("" !== $part && '0' !== $part[0] && \strspn($part, '0123456789') === \strlen($part) && ($part = (int) $part) > 0) {
+    if ($part = \x\page\part($path = \trim($url->path ?? "", '/'))) {
         $path = \substr($path, 0, -\strlen('/' . $part));
-    } else {
-        unset($part);
     }
     $part = ($part ?? 0) - 1;
     $route = \trim($state->x->author->route ?? 'author', '/');
@@ -238,13 +230,14 @@ namespace x\author {
     if (0 === \strpos($path . '/', $route . '/')) {
         \Hook::set('route.author', __NAMESPACE__ . "\\route__author", 100);
         \Hook::set('route.page', __NAMESPACE__ . "\\route__page", 90);
-        \State::set('is', [
-            'author' => $part < 0 && $path !== $route,
-            'authors' => $part >= 0
+        \State::set([
+            'is' => [
+                'author' => $part < 0 && $path !== $route,
+                'authors' => $part >= 0
+            ]
         ]);
         // For `/author/:name/…`
         if ("" !== ($v = \substr($path, \strlen($route) + 1))) {
-            \State::set('q.author', $v);
             $folder = \LOT . \D . 'user' . \D . \strtr($v, '/', \D);
             if ($file = \exist([
                 $folder . '.archive',
@@ -252,6 +245,17 @@ namespace x\author {
             ], 1)) {
                 \lot('author', $author = new \Author($file));
             }
+            // A user does not need to exist in order to declare route query data. Given the subjective nature of this
+            // method, it is up to the developer of the extension to keep track of the data for later use. It can then
+            // be used across the route since Mecha lacks a native mechanism to collect route information.
+            \State::set([
+                'q' => [
+                    'author' => [
+                        'name' => $v,
+                        'part' => $part >= 0 ? $part + 1 : null
+                    ]
+                ]
+            ]);
         }
     } else {
         $a = \explode('/', $path);
@@ -265,28 +269,29 @@ namespace x\author {
             ], 1)) {
                 \Hook::set('route.author', __NAMESPACE__ . "\\route__author", 100);
                 \Hook::set('route.page', __NAMESPACE__ . "\\route__page", 90);
-                \State::set('is', [
+            }
+            \State::set([
+                'is' => [
                     'author' => false,
                     'authors' => true
-                ]);
-            }
+                ],
+                'q' => [
+                    'author' => [
+                        'name' => null,
+                        'part' => $part + 1
+                    ]
+                ]
+            ]);
         } else {
             $r = \array_pop($a);
             $folder = \LOT . \D . 'user' . \D . $v;
             // For `/…/author/:name/:part`
             if ($a && $part >= 0 && $r === $route) {
-                \Hook::set('route.author', __NAMESPACE__ . "\\route__author", 100);
-                \Hook::set('route.page', __NAMESPACE__ . "\\route__page", 90);
-                \State::set('is', [
-                    'author' => false,
-                    'authors' => true
-                ]);
-                \State::set('q.author', $v);
+                $folder = \LOT . \D . 'page' . \D . \implode(\D, $a);
                 if ($file = \exist([
                     $folder . '.archive',
                     $folder . '.page'
                 ], 1)) {
-                    $folder = \LOT . \D . 'page' . \D . \implode(\D, $a);
                     \lot('author', new \Author($file, [
                         'parent' => \exist([
                             $folder . '.archive',
@@ -294,6 +299,20 @@ namespace x\author {
                         ], 1) ?: null
                     ]));
                 }
+                \Hook::set('route.author', __NAMESPACE__ . "\\route__author", 100);
+                \Hook::set('route.page', __NAMESPACE__ . "\\route__page", 90);
+                \State::set([
+                    'is' => [
+                        'author' => false,
+                        'authors' => true
+                    ],
+                    'q' => [
+                        'author' => [
+                            'name' => $v,
+                            'part' => $part + 1
+                        ]
+                    ]
+                ]);
             }
         }
     }
