@@ -22,17 +22,13 @@ namespace x\author {
         $part = ($part ?? 0) - 1;
         // For `/…/author/:part`, and `/…/author/:name/:part`
         if ($part >= 0 && $path) {
-            $folder = \LOT . \D . 'page' . \D . $path;
-            if ($file = \exist([
-                $folder . '.archive',
-                $folder . '.page'
-            ], 1)) {
+            if ($file = \exist(\LOT . \D . 'page' . \D . $path . '.{' . ($x = \x\page\x()) . '}', 1)) {
                 \lot('page', $page = new \Page($file));
                 // For `/…/author/:name/:part`
                 if ($name = $state->q('author.name')) {
                     $chunk = $author->chunk ?? $page->chunk ?? 5;
                     $sort = \array_replace([1, 'path'], (array) ($page->sort ?? []), (array) ($author->sort ?? []));
-                    if ($pages = $page->children('page', true)) {
+                    if ($pages = $page->children($x, true)) {
                         $pages = $pages->is(function ($v) use ($name) {
                             $v = $v->author;
                             if ($v instanceof \User) {
@@ -69,9 +65,9 @@ namespace x\author {
                 }
                 // For `/…/author/:part`
                 $authors = [];
-                $chunk = $state->x->author->page->chunk ?? $page->chunk ?? 5;
-                $sort = \array_replace([1, 'path'], (array) ($page->sort ?? []), (array) ($state->x->author->page->sort ?? []));
-                if ($pages = $page->children('page', true)) {
+                $chunk = $state->x->author->lot->chunk ?? $page->chunk ?? 5;
+                $sort = \array_replace([1, 'path'], (array) ($page->sort ?? []), (array) ($state->x->author->lot->sort ?? []));
+                if ($pages = $page->children(\x\page\x(), true)) {
                     foreach ($pages as $v) {
                         $v = $v->author;
                         if ($v && $v instanceof \User) {
@@ -108,14 +104,10 @@ namespace x\author {
         // For `/author/:name`, and `/author/:name/:part`
         if ($name = $state->q('author.name')) {
             \lot('page', $author);
-            $folder = \LOT . \D . 'user' . \D . $name;
-            if ($file = \exist([
-                $folder . '.archive',
-                $folder . '.page'
-            ], 1)) {
+            if ($file = \exist(\LOT . \D . 'user' . \D . $name . '.{' . ($x = \x\page\x()) . '}', 1)) {
                 $chunk = $author->chunk ?? 5;
                 $sort = \array_replace([1, 'path'], (array) ($author->sort ?? []));
-                $pages = \Pages::from(\LOT . \D . 'page' . ("" !== $path ? \D . $path : ""), 'page', true)->is(function ($v) use ($name) {
+                $pages = \Pages::from(\LOT . \D . 'page' . ("" !== $path ? \D . $path : ""), $x, true)->is(function ($v) use ($name) {
                     $v = $v->author;
                     if ($v instanceof \User) {
                         $v = $v->name;
@@ -155,11 +147,11 @@ namespace x\author {
             }
             return $content;
         }
-        $chunk = $state->x->author->page->chunk ?? 5;
-        $deep = $state->x->author->page->deep ?? 0;
-        $sort = \array_replace([1, 'path'], (array) ($state->x->author->page->sort ?? []));
+        $chunk = $state->x->author->lot->chunk ?? 5;
+        $deep = $state->x->author->lot->deep ?? 0;
+        $sort = \array_replace([1, 'path'], (array) ($state->x->author->lot->sort ?? []));
         // For `/author/:part`
-        $pages = \Authors::from(\LOT . \D . 'user', 'page')->sort($sort);
+        $pages = \Authors::from(\LOT . \D . 'user', \x\page\x())->sort($sort);
         $pager = \Pager::from($pages);
         $pager->hash = $hash;
         $pager->path = $route;
@@ -211,11 +203,7 @@ namespace x\author {
                 return \Hook::fire('route.author', [$content, ($a ? '/' . \implode('/', $a) : "") . '/' . $part, $query, $hash]);
             }
             // For `/…/author/:name/:part`
-            $folder = \LOT . \D . 'user' . \D . $v;
-            if ($route === \array_pop($a) && \exist([
-                $folder . '.archive',
-                $folder . '.page'
-            ], 1)) {
+            if ($route === \array_pop($a) && \exist(\LOT . \D . 'user' . \D . $v . '.{' . \x\page\x() . '}', 1)) {
                 return \Hook::fire('route.author', [$content, ($a ? '/' . \implode('/', $a) : "") . '/' . $part, $query, $hash]);
             }
         }
@@ -238,11 +226,7 @@ namespace x\author {
         ]);
         // For `/author/:name/…`
         if ("" !== ($v = \substr($path, \strlen($route) + 1))) {
-            $folder = \LOT . \D . 'user' . \D . \strtr($v, '/', \D);
-            if ($file = \exist([
-                $folder . '.archive',
-                $folder . '.page'
-            ], 1)) {
+            if ($file = \exist(\LOT . \D . 'user' . \D . \strtr($v, '/', \D) . '.{' . \x\page\x() . '}', 1)) {
                 \lot('author', $author = new \Author($file));
             }
             // A user does not need to exist in order to declare route query data. Given the subjective nature of this
@@ -262,11 +246,7 @@ namespace x\author {
         $v = \array_pop($a);
         // For `/…/author/:part`
         if ($a && $part >= 0 && $v === $route) {
-            $folder = \LOT . \D . 'page' . \D . \implode(\D, $a);
-            if (\exist([
-                $folder . '.archive',
-                $folder . '.page'
-            ], 1)) {
+            if (\exist(\LOT . \D . 'page' . \D . \implode(\D, $a) . '.{' . \x\page\x() . '}', 1)) {
                 \Hook::set('route.author', __NAMESPACE__ . "\\route__author", 100);
                 \Hook::set('route.page', __NAMESPACE__ . "\\route__page", 90);
             }
@@ -284,19 +264,11 @@ namespace x\author {
             ]);
         } else {
             $r = \array_pop($a);
-            $folder = \LOT . \D . 'user' . \D . $v;
             // For `/…/author/:name/:part`
             if ($a && $part >= 0 && $r === $route) {
-                $folder = \LOT . \D . 'page' . \D . \implode(\D, $a);
-                if ($file = \exist([
-                    $folder . '.archive',
-                    $folder . '.page'
-                ], 1)) {
+                if ($file = \exist(\LOT . \D . 'user' . \D . $v . '.{' . ($x = \x\page\x()) . '}', 1)) {
                     \lot('author', new \Author($file, [
-                        'parent' => \exist([
-                            $folder . '.archive',
-                            $folder . '.page'
-                        ], 1) ?: null
+                        'parent' => \exist(\LOT . \D . 'page' . \D . \implode(\D, $a) . '.{' . $x . '}', 1) ?: null
                     ]));
                 }
                 \Hook::set('route.author', __NAMESPACE__ . "\\route__author", 100);
