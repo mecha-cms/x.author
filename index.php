@@ -61,7 +61,11 @@ namespace x\author {
                         'is' => ['error' => 0 === $count ? 404 : false],
                         'with' => ['pages' => $count > 0]
                     ]);
-                    return ['pages/author/' . $name, [], 0 === $count ? 404 : 200];
+                    return [
+                        'lot' => [],
+                        'status' => 0 === $count ? 404 : 200,
+                        'y' => 'pages/author/' . $name
+                    ];
                 }
                 // For `/…/author/:part`
                 $authors = [];
@@ -97,7 +101,11 @@ namespace x\author {
                     'is' => ['error' => 0 === $count ? 404 : false],
                     'with' => ['authors' => $count > 0]
                 ]);
-                return ['pages/author', [], 0 === $count ? 404 : 200];
+                return [
+                    'lot' => [],
+                    'status' => 0 === $count ? 404 : 200,
+                    'y' => 'pages/author'
+                ];
             }
             return $content;
         }
@@ -121,7 +129,11 @@ namespace x\author {
                     \lot('t')[] = \i('Author');
                     \lot('t')[] = $author->title;
                     \State::set('has.pages', \q($pages) > 0);
-                    return ['page/author/' . $name, [], 200];
+                    return [
+                        'lot' => [],
+                        'status' => 200,
+                        'y' => 'page/author/' . $name
+                    ];
                 }
                 // For `/author/:name/:part`
                 \lot('t')[] = \i('Author');
@@ -143,7 +155,11 @@ namespace x\author {
                     'is' => ['error' => 0 === $count ? 404 : false],
                     'with' => ['pages' => $count > 0]
                 ]);
-                return ['pages/author/' . $name, [], 0 === $count ? 404 : 200];
+                return [
+                    'lot' => [],
+                    'status' => 0 === $count ? 404 : 200,
+                    'y' => 'pages/author/' . $name
+                ];
             }
             return $content;
         }
@@ -177,7 +193,11 @@ namespace x\author {
             'is' => ['error' => 0 === $count ? 404 : false],
             'with' => ['authors' => $count > 0]
         ]);
-        return ['pages/authors', [], 0 === $count ? 404 : 200];
+        return [
+            'lot' => [],
+            'status' => 0 === $count ? 404 : 200,
+            'y' => 'pages/authors'
+        ];
     }
     function route__page($content, $path, $query, $hash) {
         if (null !== $content) {
