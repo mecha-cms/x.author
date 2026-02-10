@@ -22,7 +22,7 @@ namespace x\author {
         $part = ($part ?? 0) - 1;
         // For `/…/author/:part`, and `/…/author/:name/:part`
         if ($part >= 0 && $path) {
-            if ($file = \exist(\LOT . \D . 'page' . \D . $path . '.{' . ($x = \x\page\x()) . '}', 1)) {
+            if ($file = \exist(\LOT . \D . 'page' . \D . \rawurldecode($path) . '.{' . ($x = \x\page\x()) . '}', 1)) {
                 \lot('page', $page = new \Page($file));
                 // For `/…/author/:name/:part`
                 if ($name = $state->q('author.name')) {
@@ -112,10 +112,10 @@ namespace x\author {
         // For `/author/:name`, and `/author/:name/:part`
         if ($name = $state->q('author.name')) {
             \lot('page', $author);
-            if ($file = \exist(\LOT . \D . 'user' . \D . $name . '.{' . ($x = \x\page\x()) . '}', 1)) {
+            if ($file = \exist(\LOT . \D . 'user' . \D . \rawurldecode($name) . '.{' . ($x = \x\page\x()) . '}', 1)) {
                 $chunk = $author->chunk ?? 5;
                 $sort = \array_replace([1, 'path'], (array) ($author->sort ?? []));
-                $pages = \Pages::from(\LOT . \D . 'page' . ("" !== $path ? \D . $path : ""), $x, true)->is(function ($v) use ($name) {
+                $pages = \Pages::from(\LOT . \D . 'page' . \rawurldecode("" !== $path ? \D . $path : ""), $x, true)->is(function ($v) use ($name) {
                     $v = $v->author;
                     if ($v instanceof \User) {
                         $v = $v->name;
@@ -223,7 +223,7 @@ namespace x\author {
                 return \Hook::fire('route.author', [$content, ($a ? '/' . \implode('/', $a) : "") . '/' . $part, $query, $hash]);
             }
             // For `/…/author/:name/:part`
-            if ($route === \array_pop($a) && \exist(\LOT . \D . 'user' . \D . $v . '.{' . \x\page\x() . '}', 1)) {
+            if ($route === \array_pop($a) && \exist(\LOT . \D . 'user' . \D . \rawurldecode($v) . '.{' . \x\page\x() . '}', 1)) {
                 return \Hook::fire('route.author', [$content, ($a ? '/' . \implode('/', $a) : "") . '/' . $part, $query, $hash]);
             }
         }
@@ -246,7 +246,7 @@ namespace x\author {
         ]);
         // For `/author/:name/…`
         if ("" !== ($v = \substr($path, \strlen($route) + 1))) {
-            if ($file = \exist(\LOT . \D . 'user' . \D . \strtr($v, '/', \D) . '.{' . \x\page\x() . '}', 1)) {
+            if ($file = \exist(\LOT . \D . 'user' . \D . \strtr(\rawurldecode($v), '/', \D) . '.{' . \x\page\x() . '}', 1)) {
                 \lot('author', $author = new \Author($file));
             }
             // A user does not need to exist in order to declare route query data. Given the subjective nature of this
@@ -266,7 +266,7 @@ namespace x\author {
         $v = \array_pop($a);
         // For `/…/author/:part`
         if ($a && $part >= 0 && $v === $route) {
-            if (\exist(\LOT . \D . 'page' . \D . \implode(\D, $a) . '.{' . \x\page\x() . '}', 1)) {
+            if (\exist(\LOT . \D . 'page' . \D . \rawurldecode(\implode(\D, $a)) . '.{' . \x\page\x() . '}', 1)) {
                 \Hook::set('route.author', __NAMESPACE__ . "\\route__author", 100);
                 \Hook::set('route.page', __NAMESPACE__ . "\\route__page", 90);
             }
@@ -286,9 +286,9 @@ namespace x\author {
             $r = \array_pop($a);
             // For `/…/author/:name/:part`
             if ($a && $part >= 0 && $r === $route) {
-                if ($file = \exist(\LOT . \D . 'user' . \D . $v . '.{' . ($x = \x\page\x()) . '}', 1)) {
+                if ($file = \exist(\LOT . \D . 'user' . \D . \rawurldecode($v) . '.{' . ($x = \x\page\x()) . '}', 1)) {
                     \lot('author', new \Author($file, [
-                        'parent' => \exist(\LOT . \D . 'page' . \D . \implode(\D, $a) . '.{' . $x . '}', 1) ?: null
+                        'parent' => \exist(\LOT . \D . 'page' . \D . \rawurldecode(\implode(\D, $a)) . '.{' . $x . '}', 1) ?: null
                     ]));
                 }
                 \Hook::set('route.author', __NAMESPACE__ . "\\route__author", 100);
