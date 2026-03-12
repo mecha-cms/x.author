@@ -3,14 +3,11 @@
 class Authors extends Users {
 
     public function page(...$lot) {
-        if (($v = $lot[0] ?? 0) instanceof Author) {
-            return $v;
+        static $c = [];
+        if (isset($c[$id = json_encode($lot)])) {
+            return $c[$id];
         }
-        if (is_array($v)) {
-            unset($v[P]);
-            $lot[0] = $v;
-        }
-        return new Author(...$lot);
+        return ($c[$id] = new Author(...$lot));
     }
 
 }
