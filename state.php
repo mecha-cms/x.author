@@ -6,5 +6,5 @@ return [
         'deep' => 0,
         'sort' => [-1, 'time']
     ],
-    'route' => '/author'
+    'sub' => '/author'
 ];

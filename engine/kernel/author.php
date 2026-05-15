@@ -16,7 +16,7 @@ class Author extends User {
             }
             extract(lot(), EXTR_SKIP);
             $parent = $this->parent;
-            return ($parent ? $parent->route : "") . '/' . strtr(rawurlencode(trim($state->x->author->route ?? 'author', '/') . '/' . $name . ($parent ? '/1' : "")), ['%2F' => '/']);
+            return ($parent ? $parent->route : "") . '/' . strtr(rawurlencode(trim($state->x->author->sub ?? 'author', '/') . '/' . $name . ($parent ? '/1' : "")), ['%2F' => '/']);
         }
         return parent::route(...$lot);
     }

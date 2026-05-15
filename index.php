@@ -15,7 +15,7 @@ namespace x\author {
             return $content;
         }
         \extract(\lot(), \EXTR_SKIP);
-        $route = \trim($state->x->author->route ?? 'author', '/');
+        $sub = \trim($state->x->author->sub ?? 'author', '/');
         if ($part = \x\page\part($path = \trim($path ?? "", '/'))) {
             $path = \substr($path, 0, -\strlen('/' . $part));
         }
@@ -46,7 +46,7 @@ namespace x\author {
                     \lot('t')[] = $author->title;
                     \lot('t')[] = \i('Pages');
                     $pager = \Pager::from($pages);
-                    $pager->path = $path . '/' . $route . '/' . $name;
+                    $pager->path = $path . '/' . $sub . '/' . $name;
                     \lot('pager', $pager = $pager->chunk($chunk, $part));
                     \lot('pages', $pages = $pages->chunk($chunk, $part));
                     if (0 === ($count = \q($pages))) {
@@ -86,7 +86,7 @@ namespace x\author {
                 \lot('t')[] = $page->title;
                 \lot('t')[] = \i('Authors');
                 $pager = \Pager::from($authors);
-                $pager->path = $path . '/' . $route;
+                $pager->path = $path . '/' . $sub;
                 \lot('pager', $pager = $pager->chunk($chunk, $part));
                 \lot('pages', $authors = $authors->chunk($chunk, $part));
                 if (0 === ($count = \q($authors))) {
@@ -140,7 +140,7 @@ namespace x\author {
                 \lot('t')[] = $author->title;
                 \lot('t')[] = \i('Pages');
                 $pager = \Pager::from($pages);
-                $pager->path = $path . '/' . $route . '/' . $name;
+                $pager->path = $path . '/' . $sub . '/' . $name;
                 \lot('pager', $pager = $pager->chunk($chunk, $part));
                 \lot('pages', $pages = $pages->chunk($chunk, $part));
                 if (0 === ($count = \q($pages))) {
@@ -170,7 +170,7 @@ namespace x\author {
         $pages = \Authors::from(\LOT . \D . 'user', \x\page\x())->sort($sort);
         $pager = \Pager::from($pages);
         $pager->hash = $hash;
-        $pager->path = $route;
+        $pager->path = $sub;
         $pager->query = $query;
         \lot('page', $page = new \Page([
             'description' => \i('List of site %s.', 'authors'),
@@ -204,48 +204,48 @@ namespace x\author {
             return $content;
         }
         \extract(\lot(), \EXTR_SKIP);
-        $route = \trim($state->x->author->route ?? 'author', '/');
+        $sub = \trim($state->x->author->sub ?? 'author', '/');
         if ($part = \x\page\part($path = \trim($path ?? "", '/'))) {
             $path = \substr($path, 0, -\strlen('/' . $part));
         }
         // For `/author`
-        if (!$part && $path === $route) {
+        if (!$part && $path === $sub) {
             return $content;
         }
         // For `/author/:part`, `/author/:name`, and `/author/:name/:part`
-        if (0 === \strpos($path . '/', $route . '/')) {
+        if (0 === \strpos($path . '/', $sub . '/')) {
             return \Hook::fire('route.author', [$content, $part ? '/' . $part : null, $query, $hash]);
         }
         if ($part && $path) {
             $a = \explode('/', $path);
             // For `/…/author/:part`
-            if ($route === ($v = \array_pop($a))) {
+            if ($sub === ($v = \array_pop($a))) {
                 return \Hook::fire('route.author', [$content, ($a ? '/' . \implode('/', $a) : "") . '/' . $part, $query, $hash]);
             }
             // For `/…/author/:name/:part`
-            if ($route === \array_pop($a) && \exist(\LOT . \D . 'user' . \D . \rawurldecode($v) . '.{' . \x\page\x() . '}', 1)) {
+            if ($sub === \array_pop($a) && \exist(\LOT . \D . 'user' . \D . \rawurldecode($v) . '.{' . \x\page\x() . '}', 1)) {
                 return \Hook::fire('route.author', [$content, ($a ? '/' . \implode('/', $a) : "") . '/' . $part, $query, $hash]);
             }
         }
         return $content;
     }
-    if ($part = \x\page\part($path = \trim($url->path ?? "", '/'))) {
+    if ($part = \x\page\part($path = \trim($link->path ?? "", '/'))) {
         $path = \substr($path, 0, -\strlen('/' . $part));
     }
     $part = ($part ?? 0) - 1;
-    $route = \trim($state->x->author->route ?? 'author', '/');
+    $sub = \trim($state->x->author->sub ?? 'author', '/');
     // For `/author/…`
-    if (0 === \strpos($path . '/', $route . '/')) {
+    if (0 === \strpos($path . '/', $sub . '/')) {
         \Hook::set('route.author', __NAMESPACE__ . "\\route__author", 100);
         \Hook::set('route.page', __NAMESPACE__ . "\\route__page", 90);
         \State::set([
             'is' => [
-                'author' => $part < 0 && $path !== $route,
+                'author' => $part < 0 && $path !== $sub,
                 'authors' => $part >= 0
             ]
         ]);
         // For `/author/:name/…`
-        if ("" !== ($v = \substr($path, \strlen($route) + 1))) {
+        if ("" !== ($v = \substr($path, \strlen($sub) + 1))) {
             if ($file = \exist(\LOT . \D . 'user' . \D . \strtr(\rawurldecode($v), '/', \D) . '.{' . \x\page\x() . '}', 1)) {
                 \lot('author', $author = new \Author($file));
             }
@@ -265,7 +265,7 @@ namespace x\author {
         $a = \explode('/', $path);
         $v = \array_pop($a);
         // For `/…/author/:part`
-        if ($a && $part >= 0 && $v === $route) {
+        if ($a && $part >= 0 && $v === $sub) {
             if (\exist(\LOT . \D . 'page' . \D . \rawurldecode(\implode(\D, $a)) . '.{' . \x\page\x() . '}', 1)) {
                 \Hook::set('route.author', __NAMESPACE__ . "\\route__author", 100);
                 \Hook::set('route.page', __NAMESPACE__ . "\\route__page", 90);
@@ -285,7 +285,7 @@ namespace x\author {
         } else {
             $r = \array_pop($a);
             // For `/…/author/:name/:part`
-            if ($a && $part >= 0 && $r === $route) {
+            if ($a && $part >= 0 && $r === $sub) {
                 if ($file = \exist(\LOT . \D . 'user' . \D . \rawurldecode($v) . '.{' . ($x = \x\page\x()) . '}', 1)) {
                     \lot('author', new \Author($file, [
                         'parent' => \exist(\LOT . \D . 'page' . \D . \rawurldecode(\implode(\D, $a)) . '.{' . $x . '}', 1) ?: null
